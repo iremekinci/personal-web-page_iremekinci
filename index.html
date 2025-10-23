@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İrem Ekinci - Kişisel Web Sayfası</title>
+    
+    <link rel="stylesheet" href="styles.css"> 
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/css/ol.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <header>
+    <h1>İrem Ekinci</h1>
+    <button id="theme-toggle" class="theme-toggle-btn">🌙</button> 
+</header>
+    
+    <nav>
+    <a href="#about">Home</a> 
+    <a href="Education.html">Education</a> 
+    <a href="Hobbies.html">Hobbies</a> 
+    <a href="Contact.html">Contact</a> 
+</nav>
+
+    <main>
+        <section class="card" id="about">
+            <h2>About Me</h2>
+            <p>
+                Hello! I’m İrem Ekinci, a Geomatics Engineering student at Hacettepe University. I am passionate about mapping, spatial data, and innovative technologies. I enjoy combining theoretical knowledge with practical projects to solve real-world problems. I thrive in teamwork environments and excel under pressure. I am constantly learning and improving myself. 
+            </p>
+        </section>
+
+<section class="card" id="istanbul-map"> 
+    <h2>İstanbul
+        <button onclick="toggleSatellite('map1')" class="layer-toggle-btn" data-map-id="map1">
+            <i class="fas fa-satellite"></i> Uydu Görünümü
+        </button>
+    </h2>
+    <div id="map1" class="ol-map"></div>
+    </section>
+
+<section class="card" id="hacettepe-map">
+    <h2>Hacettepe University, Ankara
+        <button onclick="toggleSatellite('map2')" class="layer-toggle-btn" data-map-id="map2">
+            <i class="fas fa-satellite"></i> Uydu Görünümü
+        </button>
+    </h2>
+    <div id="map2" class="ol-map"></div>
+    </section>
+    </main>
+    <button onclick="topFunction()" id="backToTopBtn" title="Sayfa Başına Dön">
+    <i class="fas fa-arrow-up"></i> 
+</button>
+    <footer>
+        © 2025 İrem Ekinci - GMT458 Web GIS Assignment
+    </footer>
+</body>
+
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/build/ol.js"></script>
+    
+    <script>
+    // Harita nesnelerini global olarak saklamak için
+    var mapObjects = {};
+    
+    // Harita Oluşturma Fonksiyonu
+    function createMap(mapId, coords, zoomLevel) {
+        
+        // 1. Katmanları Fonksiyonun içinde oluşturma (Global değişkenleri kullanmaktan kaçınma)
+        var osmLayer = new ol.layer.Tile({
+            source: new ol.source.OSM(),
+            visible: true,
+            title: 'OSM'
+        });
+
+        var satelliteLayer = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer">ArcGIS</a>'
+            }),
+            visible: false, // Başlangıçta gizli
+            title: 'Satellite'
+        });
+
+        var map = new ol.Map({
+            target: mapId,
+            layers: [
+                osmLayer,      // Yeni oluşturulan OSM Katmanını ekle
+                satelliteLayer // Yeni oluşturulan Uydu Katmanını ekle
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat(coords),
+                zoom: zoomLevel
+            }),
+            controls: ol.control.defaults().extend([
+                new ol.control.MousePosition({
+                    projection: 'EPSG:4326', 
+                    coordinateFormat: function(coordinate) {
+                        return ol.coordinate.format(coordinate, '↑ Enlem: {y}, → Boylam: {x}', 4);
+                    },
+                    className: 'custom-mouse-position-text',
+                    target: document.getElementById('mouse-position-' + mapId.slice(-1)),
+                    undefinedHTML: 'Harita üzerinde geziniz...'
+                })
+            ])
+        });
+        
+        // map.set('layers', [osmLayer, satelliteLayer]); // Katmanları harita nesnesine bağlama
+
+        // Oluşturulan harita nesnesini ve katmanları sakla (toggleSatellite fonksiyonu için)
+        mapObjects[mapId] = { map: map, osm: osmLayer, sat: satelliteLayer };
+        
+        // Başlangıçta OSM butonunu aktif et
+        var btn = document.querySelector(`button[data-map-id="${mapId}"]`);
+        if(btn) btn.classList.add('active');
+        
+        return map;
+    }
+
+    // Haritaları Başlat
+    var hacettepeCoords = [32.7337, 39.8665]; 
+    var istanbulCoords = [28.9784, 41.0082]; 
+
+    createMap('map1', istanbulCoords, 10);
+    createMap('map2', hacettepeCoords, 14);
+
+    // KATMAN DEĞİŞTİRME FONKSİYONU (Güncellendi)
+    function toggleSatellite(mapId) {
+        var mapData = mapObjects[mapId];
+        if (!mapData) return;
+
+        var osm = mapData.osm;
+        var satellite = mapData.sat;
+        var btn = document.querySelector(`button[data-map-id="${mapId}"]`);
+        
+        // Görünürlük durumunu tersine çevir
+        if (satellite.getVisible()) {
+            // Uydu açıksa, OSM'ye geç
+            satellite.setVisible(false);
+            osm.setVisible(true);
+            btn.classList.add('active');
+            btn.innerHTML = '<i class="fas fa-satellite"></i> Uydu Görünümü';
+        } else {
+            // OSM açıksa, Uyduya geç
+            osm.setVisible(false);
+            satellite.setVisible(true);
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fas fa-map"></i> OSM Görünümü';
+        }
+    }
+</script>
+    <script>
+    // Başa Dön butonunu al
+    let mybutton = document.getElementById("backToTopBtn");
+
+    // Kullanıcı sayfayı aşağı kaydırdıkça butonu göster/gizle
+    window.onscroll = function() {scrollFunction()};
+
+    function scrollFunction() {
+        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 200) {
+            mybutton.style.display = "block";
+        } else {
+            mybutton.style.display = "none";
+        }
+    }
+
+    // Butona tıklandığında sayfayı en üste kaydır
+    function topFunction() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Yumuşak kaydırma animasyonu
+        });
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card');
+        
+        cards.forEach((card, index) => {
+            // Her karta 0.15 saniyelik gecikme ile sırayla animasyon uygula
+            card.style.animationDelay = `${index * 0.15}s`;
+        });
+    });
+</script>
+<script>
+    // Header elementini al
+    const header = document.querySelector('header');
+    
+    // Pencere kaydırıldığında header'a 'scrolled' sınıfını ekler/kaldırır
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 0) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // 1. Kaydedilmiş tercihi yükle
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            toggleBtn.textContent = '☀️'; // Buton ikonunu Güneş yap
+        } else {
+            toggleBtn.textContent = '🌙'; // Buton ikonunu Ay yap
+        }
+
+        // 2. Buton tıklama olayını dinle
+        toggleBtn.addEventListener('click', () => {
+            if (body.classList.contains('dark-mode')) {
+                // Aydınlık moda geçiş
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+                toggleBtn.textContent = '🌙';
+            } else {
+                // Karanlık moda geçiş
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                toggleBtn.textContent = '☀️';
+            }
+        });
+    });
+    
+</script>
+</body>
+</html>
