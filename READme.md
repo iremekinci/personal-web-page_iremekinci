@@ -1,11 +1,11 @@
 # 📍 Personal Web Page – İrem Ekinci
 
-This is a personal website created as part of the **GMT 458 Web GIS course assignment**. [cite_start]The aim of this assignment is to familiariase students with HTML, CSS, and OpenLayers by creating their personal web pages[cite: 5]. [cite_start]The project is hosted on GitHub[cite: 6].
+This is a personal website created as part of the **GMT 458 Web GIS course assignment**.The aim of this assignment is to familiariase students with HTML, CSS, and OpenLayers by creating their personal web pages. The project is hosted on GitHub.
 
 
 ## AI Assistance and Key Learnings 🧠
 
-[cite_start]I first understood and searched the issues/problems on Google, and if I could not resolve it, then I used AI[cite: 19].
+I first understood and searched the issues/problems on Google, and if I could not resolve it, then I used AI
 
 | Topic | AI Usage Purpose & Key Learning |
 | :--- | :--- |
